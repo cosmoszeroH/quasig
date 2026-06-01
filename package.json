@@ -3,7 +3,16 @@
   "name": "quasig",
   "version": "1.0.0",
   "description": "A simulation for reactive programming",
-  "main": "index.js",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/quasig.cjs",
+  "module": "./dist/quasig.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/quasig.js",
+      "require": "./dist/quasig.cjs"
+    }
+  },
   "scripts": {
     "build": "vite build",
     "test": "vitest run",
