@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+  ],
+  "jsPlugins": [
+    "oxlint-plugin-eslint"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "eslint/prefer-const": "error",
+    "eslint-js/semi": "error",
+    "eslint-js/quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "eslint-js/comma-dangle": [
+      "error",
+      "always-multiline"
+    ],
+  },
+  "env": {
+    "builtin": true
+  }
+}
