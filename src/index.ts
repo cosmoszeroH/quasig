@@ -26,11 +26,11 @@ export function ref<T> (value: T): Ref<T> {
   const result = {
     _value: value,
 
-    get value () {
+    get value (): T {
       return this._value;
     },
 
-    set value (newVal) {
+    set value (newVal: T) {
       this._value = newVal;
       trigger(this);
     },
