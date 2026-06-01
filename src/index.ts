@@ -1,6 +1,6 @@
 import type { Ref } from './types';
 
-const dependencyMap = new Map<Ref<unknown>, Set<() => void>>();
+const dependencyMap = new WeakMap<Ref<unknown>, Set<() => void>>();
 
 function track<T> (thisArg: Ref<T>, effect: () => void) {
   const effects = dependencyMap.get(thisArg);
