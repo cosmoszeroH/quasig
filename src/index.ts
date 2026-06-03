@@ -45,3 +45,15 @@ export function watch (refs: Ref<unknown>[], effect: () => void) {
     track(ref, effect);
   }
 }
+
+
+export function computed (effect: () => void) {
+  return {
+    get value () {
+      return effect();
+    },
+    set value (newValue) {
+      throw Error('This object is read-only');
+    },
+  };
+}
