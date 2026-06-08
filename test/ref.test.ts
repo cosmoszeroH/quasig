@@ -11,8 +11,8 @@ describe('[basic functionality] ref())', () => {
       const _undefined = ref(undefined);
       const _null = ref(null);
       const arr = ref([null, undefined, 5]);
-      const func = ref(function foo () { console.log('test') });
-      const arrowFunc = ref(() => { console.log('test') });
+      const func = ref(function foo () { console.log('test'); });
+      const arrowFunc = ref(() => { console.log('test'); });
       const obj = ref({
         num: 5,
         str: 'hung hung',
@@ -110,8 +110,8 @@ describe('[basic functionality] ref())', () => {
   });
 
   it('should return a different ref each time', () => {
-    expect(ref(1)).not.toEqual(ref(1));
-    expect(ref(undefined)).not.toEqual(ref(undefined));
-    expect(ref(null)).not.toEqual(ref(null));
+    expect(ref(1)).not.toBe(ref(1));
+    expect(ref(undefined)).not.toBe(ref(undefined));
+    expect(ref(null)).not.toBe(ref(null));
   });
 });
