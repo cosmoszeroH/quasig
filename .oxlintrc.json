@@ -13,6 +13,7 @@
   },
   "rules": {
     "eslint/prefer-const": "error",
+    "eslint-js/space-before-function-paren": ["error", "always"],
     "eslint-js/semi": "error",
     "eslint-js/quotes": [
       "error",
@@ -25,6 +26,7 @@
       "error",
       "always-multiline"
     ],
+    "typescript/explicit-function-return-type": "error",
   },
   "env": {
     "builtin": true
