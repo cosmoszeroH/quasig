@@ -128,8 +128,7 @@ export class ComputedRefImpl<T> implements ComputedRef<T> {
   }
 }
 
-export function computed<T> (fn: () => any): ComputedRef<T> {
+export function computed<T> (fn: () => any): ComputedRefImpl<T> {
   const effect = new ReactiveEffect(fn);
   return new ComputedRefImpl(effect);
 }
-
