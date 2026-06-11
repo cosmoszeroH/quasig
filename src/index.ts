@@ -1,4 +1,4 @@
-import type { Ref, ComputedRef } from './types';
+import type { Ref, ComputedRef, WatchSource, WatchCallback } from './types';
 
 export let activeEffect: null | ReactiveEffect = null;
 export type keyToDepMap = Map<any, Dep>;
@@ -6,9 +6,14 @@ export const targetMap: WeakMap<object, keyToDepMap> = new WeakMap();
 
 export class ReactiveEffect {
   fn: () => any;
+  scheduler?: ((...args: any[]) => any) | undefined;
 
-  constructor (fn: () => any) {
+  constructor (fn: () => any, scheduler?: ((...args: any[]) => any) | undefined) {
     this.fn = fn;
+
+    if (scheduler) {
+      this.scheduler = scheduler;
+    }
   }
 
   run = (): any => {
@@ -22,12 +27,20 @@ export class ReactiveEffect {
       activeEffect = prevEffect;
     }
   };
+
+  trigger (): void {
+    if (this.scheduler) {
+      this.scheduler();
+    } else {
+      this.run();
+    }
+  }
 }
 
 export class Dep {
-  deps: Set<ReactiveEffect>|undefined = undefined;
+  deps: Set<ReactiveEffect> | undefined = undefined;
 
-  constructor () {}
+  constructor () { }
 
   track (): any {
     if (!this.deps) {
@@ -43,7 +56,7 @@ export class Dep {
       return;
     }
     for (const effect of this.deps) {
-      effect.run();
+      effect.trigger();
     }
   }
 }
@@ -75,7 +88,7 @@ export function trigger (target: object, key: string): void {
   }
 
   for (const effect of dep.deps) {
-    effect.run();
+    effect.trigger();
   }
 }
 
@@ -98,19 +111,21 @@ export class RefImpl<T> implements Ref<T> {
   }
 }
 
-export function ref<T> (value: any): Ref<T> {
+export function ref<T> (value: any): RefImpl<T> {
   if (isRef(value)) {
-    return value;
+    return value as RefImpl<T>;
   }
 
   return new RefImpl(value);
 }
 
-function isRef (obj: any): boolean {
+function isRef<T> (obj: any): obj is RefImpl<T> {
   return (obj instanceof RefImpl);
 }
 
 export class ComputedRefImpl<T> implements ComputedRef<T> {
+  public readonly __v_isRef = true;
+
   dep = new Dep();
   effect: ReactiveEffect;
 
@@ -131,4 +146,41 @@ export class ComputedRefImpl<T> implements ComputedRef<T> {
 export function computed<T> (fn: () => any): ComputedRefImpl<T> {
   const effect = new ReactiveEffect(fn);
   return new ComputedRefImpl(effect);
+}
+
+export function isFunction (value: any): value is Function {
+  return typeof value === 'function';
+}
+
+export function watch<T> (source: WatchSource<T> | WatchSource<T>[], callback?: WatchCallback): void {
+  let getter: () => any;
+  let effect: ReactiveEffect;
+  let oldValue: any;
+  let newValue: any;
+
+  if (isRef(source)) {
+    getter = (): any => source.value;
+  } else if (Array.isArray(source)) {
+    getter = (): any => source.map(s => s.value);
+  } else {
+    throw TypeError(`Source not support type ${typeof source}`);
+  }
+
+  if (callback) {
+    const scheduler = (): void => {
+      newValue = effect.run();
+      callback(newValue, oldValue);
+      oldValue = newValue;
+    };
+
+    effect = new ReactiveEffect(getter, scheduler);
+  } else {
+    effect = new ReactiveEffect(getter);
+  }
+
+  if (callback) {
+    oldValue = effect.run();
+  } else {
+    effect.run();
+  }
 }
