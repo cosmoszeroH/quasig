@@ -184,3 +184,9 @@ export function watch<T> (source: WatchSource<T> | WatchSource<T>[], callback?: 
     effect.run();
   }
 }
+
+export function watchEffect (source: () => any): void {
+  const effect = new ReactiveEffect(source);
+
+  effect.trigger();
+}

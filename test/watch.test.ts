@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ref, watch } from '../src';
+import { ref, watch, watchEffect } from '../src';
 
 describe('watch function implementation', () => {
 
@@ -95,5 +95,55 @@ describe('watch function implementation', () => {
       watch(balance);
       balance.value = 2000;
     }).not.toThrow();
+  });
+});
+
+describe('[basic functionality] watchEffect()', () => {
+  it('should run immediately on initialization', () => {
+    const count = ref(10);
+    const cb = vi.fn(() => {
+      // Access value to track it
+      const _ = count.value;
+    });
+
+    watchEffect(cb);
+
+    // Should fire instantly on creation frame to catch dependencies
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it('should auto-track any ref accessed within the function body', () => {
+    const message = ref('hello');
+    let captured = '';
+
+    watchEffect(() => {
+      captured = message.value;
+    });
+
+    expect(captured).toEqual('hello');
+
+    // Mutate the dependency
+    message.value = 'world';
+
+    // The scheduler re-ran the effect function automatically
+    expect(captured).toEqual('world');
+  });
+
+  it('should track the dependency by logic not all variable in the callback', () => {
+    const cond = ref('false');
+    const a = ref(10);
+    const b = ref(20);
+
+    watchEffect(() => {
+      if (cond.value) {
+        a.value = 20;
+      } else {
+        b.value = 25;
+      }
+    });
+
+    expect(a.dep.deps).toBeNullable();
+    expect(b.dep.deps).toBeNullable();
+    expect(cond.dep.deps).not.toBeNullable();
   });
 });
