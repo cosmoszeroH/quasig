@@ -93,6 +93,8 @@ export function trigger (target: object, key: string): void {
 }
 
 export class RefImpl<T> implements Ref<T> {
+  public readonly __v_isRef = true;
+
   dep = new Dep();
   private _value;
 
@@ -120,7 +122,7 @@ export function ref<T> (value: any): RefImpl<T> {
 }
 
 function isRef<T> (obj: any): obj is RefImpl<T> {
-  return (obj instanceof RefImpl);
+  return !!(obj && obj.__v_isRef === true);
 }
 
 export class ComputedRefImpl<T> implements ComputedRef<T> {
