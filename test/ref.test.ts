@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { ref } from '../src';
+import { describe, expect, it, vi } from 'vitest';
+import { ref, shallowRef, watch } from '../src';
 import { randomInt } from 'node:crypto';
 
 describe('[basic functionality] ref())', () => {
@@ -113,5 +113,70 @@ describe('[basic functionality] ref())', () => {
     expect(ref(1)).not.toBe(ref(1));
     expect(ref(undefined)).not.toBe(ref(undefined));
     expect(ref(null)).not.toBe(ref(null));
+  });
+});
+
+
+describe('Deep Ref vs Shallow Ref functionality', () => {
+
+  // --- TEST 1: NESTED MUTATIONS ---
+  it('should trigger updates on nested properties for deep ref, but ignore them for shallow ref', () => {
+    const deep = ref({ count: 0 });
+    const shallow = shallowRef({ count: 0 });
+
+    const deepCb = vi.fn();
+    const shallowCb = vi.fn();
+
+    // Watch both targets
+    watch(deep, deepCb);
+    watch(shallow, shallowCb);
+
+    // Mutate a nested key
+    deep.value.count = 1;
+    shallow.value.count = 1;
+
+    // Deep ref tracks nested mutations
+    expect(deepCb).toHaveBeenCalledTimes(1);
+
+    // Shallow ref completely ignores nested mutations because the object isn't proxied
+    expect(shallowCb).not.toHaveBeenCalled();
+    expect(shallow.value.count).toEqual(1); // The value changed raw, but didn't trigger
+  });
+
+  // --- TEST 2: ROOT-LEVEL MUTATIONS ---
+  it('should trigger updates on both when the entire .value root reference is replaced', () => {
+    const deep = ref({ name: 'Alex' });
+    const shallow = shallowRef({ name: 'Alex' });
+
+    const deepCb = vi.fn();
+    const shallowCb = vi.fn();
+
+    watch(deep, deepCb);
+    watch(shallow, shallowCb);
+
+    // Swap out the whole object references entirely
+    deep.value = { name: 'Tony' };
+    shallow.value = { name: 'Tony' };
+
+    // Replacing the root interact directly with RefImpl's setter, firing BOTH dependency loops
+    expect(deepCb).toHaveBeenCalledTimes(1);
+    expect(shallowCb).toHaveBeenCalledTimes(1);
+
+    expect(deep.value.name).toEqual('Tony');
+    expect(shallow.value.name).toEqual('Tony');
+  });
+
+  // --- TEST 3: RAW IDENTITY PRESERVATION ---
+  it('should leave objects inside shallowRef as raw vanilla objects without proxy wrappers', () => {
+    const rawObject = { matrix: [1, 2, 3] };
+
+    const deep = ref(rawObject);
+    const shallow = shallowRef(rawObject);
+
+    // In a deep ref, deep.value is transformed into a reactive Proxy shell
+    expect(deep.value).not.toBe(rawObject);
+
+    // In a shallow ref, shallow.value points directly to the exact same spot in memory
+    expect(shallow.value).toBe(rawObject);
   });
 });

@@ -73,7 +73,7 @@ describe('watch function implementation', () => {
     expect(() => {
       // Testing your fallback block throwing an explicit error message structure
       watch('not a ref string' as any, () => { });
-    }).toThrow(/Source not support type string/);
+    }).toThrow(/Source use non-supported type string/);
   });
 
   it('should handle nested references unwrapping properties inside the array mapper runtime loop', () => {
